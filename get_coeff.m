@@ -42,32 +42,32 @@ jacobian_next= [0.5 * zcryst_next 0.5 * (1 - zcryst_next)];
 jacobian_half = 0.5 * (jacobian + jacobian_next);
 
 % Memory allocation
-a = zeros(1, sum(N)+2);
-b = zeros(1, sum(N)+2);
-c = zeros(1, sum(N)+2);
-f = zeros(1, sum(N)+2);
+a = zeros(1, sum(N)+1);
+b = zeros(1, sum(N)+1);
+c = zeros(1, sum(N)+1);
+f = zeros(1, sum(N)+1);
 
 % Coefficients for inner nodes 
 
 % TODO: use repmat
 % TODO: use vector selecters
-a(2:N(1)-1) = alpha(1) / jacobian_half(1) - delta * zdiff_half(2:N(1)-1);
-a(N(1)+3:sum(N)) = alpha(2) / jacobian_half(2) - delta * zdiff_half(N(1)+3:end-1);
+a(1:N(1)-1) = alpha(1) / jacobian_half(1) - delta * zdiff_half(1:N(1)-1);
+a(N(1)+3:end) = alpha(2) / jacobian_half(2) - delta * zdiff_half(N(1)+3:end-1);
 		  
-b(2:N(1)-1) = alpha(1) / jacobian_half(1) + delta * zdiff_half(3:N(1));
-b(N(1)+3:sum(N)) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+4:end); 
+b(1:N(1)-1) = alpha(1) / jacobian_half(1) + delta * zdiff_half(2:N(1));
+b(N(1)+3:end) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+4:end); 
 
-c(2:N(1)-1) = jacobian_next(1) + 2 * alpha(1) / jacobian_half(1) ... 
-	+ delta * (zdiff_half(2:N(1)-1) - zdiff_half(3:N(1)));
-c(N(1)+3:sum(N)) = jacobian_next(2) + 2 * alpha(2) / jacobian_half(2) ...
+c(1:N(1)-1) = jacobian_next(1) + 2 * alpha(1) / jacobian_half(1) ... 
+	+ delta * (zdiff_half(1:N(1)-1) - zdiff_half(2:N(1)));
+c(N(1)+3:end) = jacobian_next(2) + 2 * alpha(2) / jacobian_half(2) ...
 	+ delta * (zdiff_half(N(1)+3:end-1) - zdiff_half(N(1)+4:end));
 
-f(2:N(1)-1) = jacobian(1) * T(2:N(1)-1) ...
-	+ (alpha(1) / jacobian_half(1)) * (T(3:N(1)) - 2*T(2:N(1)-1) + T(1:N(1)-2)) ...
-	+ delta * ((zdiff_half(3:N(1)) .* (T(3:N(1)) + T(2:N(1)-1))) ... 
-				- (zdiff_half(2:N(1)-1) .* (T(2:N(1)-1) + T(1:N(1)-2))));
+f(1:N(1)-1) = jacobian(1) * T(2:N(1)) ...
+	+ (alpha(1) / jacobian_half(1)) * (T(3:N(1)+1) - 2*T(2:N(1)) + T(1:N(1)-1)) ...
+	+ delta * ((zdiff_half(2:N(1)) .* (T(3:N(1)+1) + T(2:N(1)))) ... 
+				- (zdiff_half(1:N(1)-1) .* (T(2:N(1)) + T(1:N(1)-1))));
 			
-f(N(1)+3:sum(N)) = jacobian(2) * T(N(1)+3:sum(N)) ...
+f(N(1)+3:end) = jacobian(2) * T(N(1)+3:end-1) ...
 	+ (alpha(2) / jacobian_half(2)) * (T(N(1)+4:end) - 2*T(N(1)+3:end-1) + T(N(1)+2:end-2)) ...
 	+ delta * ((zdiff_half(N(1)+4:end) .* (T(N(1)+4:end) + T(N(1)+3:end-1))) ... 
 				 -(zdiff_half(N(1)+3:end-1) .* (T(N(1)+3:end-1) + T(N(1)+2:end-2))));
@@ -102,13 +102,9 @@ f(N(1)+1) = (lambda_sl * beta / jacobian_half(1)) * T(N(1)) ...
 	+ (beta / jacobian_half(2)) * T(N(1)+1);
 
 % Coefficients for boundary nodes
-a(1) = 0.5;
-c(1) = 0.5;
-a(end) = 0.5;
-c(end) = 0.5;
-f(1) = f_bottom(time);
-f(end) = f_top(time);
-
+a = [0.5 a 0.5];
+c = [0.5 c 0.5];
+f = [f_bottom(time) f f_top(time)];
 f = -f;
 
 end
