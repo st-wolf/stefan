@@ -26,7 +26,7 @@ alpha = tstep * lambda / (2 * xstep^2);
 delta = tstep / (4 * xstep);
 
 % $\dfrac{dz}{dt}$ computation
-xgrid = (-0.5*xstep):xstep:(1 + 0.5*xstep);
+xgrid = 0:xstep:1;
 zgrid = ztransform(xgrid, N, zcryst);
 
 zcryst_next = zcryst + tstep * vgrowth;
@@ -37,40 +37,40 @@ zdiff_half = (zgrid_next - zgrid) / tstep;
 % $\psi = \dfrac{dz}{dx}$ computation
 
 % jacobians = [solid liquid]
-jacobian = [0.5 * zcryst 0.5 * (1 - zcryst)];
-jacobian_next= [0.5 * zcryst_next 0.5 * (1 - zcryst_next)];
+jacobian = [2 * zcryst, 2 * (1 - zcryst)];
+jacobian_next= [2 * zcryst_next, 2 * (1 - zcryst_next)];
 jacobian_half = 0.5 * (jacobian + jacobian_next);
 
 % Memory allocation
-a = zeros(1, sum(N)+1);
-b = zeros(1, sum(N)+1);
-c = zeros(1, sum(N)+1);
-f = zeros(1, sum(N)+1);
+a = zeros(1, sum(N));
+b = zeros(1, sum(N));
+c = zeros(1, sum(N));
+f = zeros(1, sum(N));
 
 % Coefficients for inner nodes 
 
 % TODO: use repmat
 % TODO: use vector selecters
 a(1:N(1)-1) = alpha(1) / jacobian_half(1) - delta * zdiff_half(1:N(1)-1);
-a(N(1)+3:end) = alpha(2) / jacobian_half(2) - delta * zdiff_half(N(1)+3:end-1);
+a(N(1)+2:end) = alpha(2) / jacobian_half(2) - delta * zdiff_half(N(1)+2:end-1);
 		  
 b(1:N(1)-1) = alpha(1) / jacobian_half(1) + delta * zdiff_half(2:N(1));
-b(N(1)+3:end) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+4:end); 
+b(N(1)+2:end) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+3:end); 
 
 c(1:N(1)-1) = jacobian_next(1) + 2 * alpha(1) / jacobian_half(1) ... 
 	+ delta * (zdiff_half(1:N(1)-1) - zdiff_half(2:N(1)));
-c(N(1)+3:end) = jacobian_next(2) + 2 * alpha(2) / jacobian_half(2) ...
-	+ delta * (zdiff_half(N(1)+3:end-1) - zdiff_half(N(1)+4:end));
+c(N(1)+2:end) = jacobian_next(2) + 2 * alpha(2) / jacobian_half(2) ...
+	+ delta * (zdiff_half(N(1)+2:end-1) - zdiff_half(N(1)+3:end));
 
 f(1:N(1)-1) = jacobian(1) * T(2:N(1)) ...
 	+ (alpha(1) / jacobian_half(1)) * (T(3:N(1)+1) - 2*T(2:N(1)) + T(1:N(1)-1)) ...
 	+ delta * ((zdiff_half(2:N(1)) .* (T(3:N(1)+1) + T(2:N(1)))) ... 
 				- (zdiff_half(1:N(1)-1) .* (T(2:N(1)) + T(1:N(1)-1))));
 			
-f(N(1)+3:end) = jacobian(2) * T(N(1)+3:end-1) ...
+f(N(1)+2:end) = jacobian(2) * T(N(1)+3:end-1) ...
 	+ (alpha(2) / jacobian_half(2)) * (T(N(1)+4:end) - 2*T(N(1)+3:end-1) + T(N(1)+2:end-2)) ...
-	+ delta * ((zdiff_half(N(1)+4:end) .* (T(N(1)+4:end) + T(N(1)+3:end-1))) ... 
-				 -(zdiff_half(N(1)+3:end-1) .* (T(N(1)+3:end-1) + T(N(1)+2:end-2))));
+	+ delta * ((zdiff_half(N(1)+3:end-1) .* (T(N(1)+4:end) + T(N(1)+3:end-1))) ... 
+				 -(zdiff_half(N(1)+2:end-2) .* (T(N(1)+3:end-1) + T(N(1)+2:end-2))));
 
 % Coefficients for solid border node
 
@@ -95,11 +95,16 @@ f(N(1)+2) = jacobian(2) * T(N(1)+2) - (4*alpha(2) / sum(jacobian_half)) * T(N(1)
 lambda_sl = lambda(1) / lambda(2);
 beta = tstep / xstep;
 
-a(N(1)+1) = (lambda_sl * beta) / jacobian_half(1);
-b(N(1)+1) = beta / jacobian_half(2);
-c(N(1)+1) = -St;
-f(N(1)+1) = (lambda_sl * beta / jacobian_half(1)) * T(N(1)) ...
+af = (lambda_sl * beta) / jacobian_half(1);
+bf = beta / jacobian_half(2);
+cf = -St;
+ff = (lambda_sl * beta / jacobian_half(1)) * T(N(1)) ...
 	+ (beta / jacobian_half(2)) * T(N(1)+1);
+
+a = [a(1:N(1)) af a(N(1)+1:end)];
+b = [b(1:N(1)) bf b(N(1)+1:end)];
+c = [c(1:N(1)) cf c(N(1)+1:end)];
+f = [f(1:N(1)) ff f(N(1)+1:end)];
 
 % Coefficients for boundary nodes
 a = [0.5 a 0.5];

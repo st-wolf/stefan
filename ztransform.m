@@ -10,9 +10,10 @@ function zgrid = ztransform( xgrid, N, zcryst )
 % OUTPUT:
 % :z: values of corresponding node of z-grid
 
-zgrid = zeros(1, sum(N)+2);
-zgrid(1:N(1)+1) = 0.5 * xgrid(1:N(1)+1) * zcryst;
-zgrid(N(1)+2:end) = 0.5 * xgrid(N(1)+2:end) * (1 - zcryst);
+zgrid = zeros(1, sum(N)+1);
+zgrid(1:N(1)) = 2 * xgrid(1:N(1)) * zcryst;
+zgrid(N(1)+1) = zcryst;
+zgrid(N(1)+2:end) = 2 * xgrid(N(1)+2:end) * (1 - zcryst) + 2*zcryst - 1;
 
 end
 
