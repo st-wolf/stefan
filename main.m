@@ -33,18 +33,18 @@ clc
 
 N = [4 4];
 xstep = 1 / sum(N);
-xgrid = (-0.5*xstep):xstep:(1 + 0.5*xstep);
+xgrid = 0:xstep:1;
 
 T = zeros(2, sum(N)+2);
 
 zcryst = 0.5;
 vgrowth = 0.5;
-zgrid = ztransform(xgrid, N, zcryst);
+zgrid = ztransform(xgrid, zcryst);
 
-T(1, :) = f_init(zgrid);
+T(1, :) = f_init(ztransform(-0.5*xstep:xstep:(1 + 0.5*xstep), zcryst));
 time = 1;
 
-% get_coeff(T(1, :), zcryst, time, N, vgrowth, lambda, St, xstep, time, f_bottom, f_top);
+[A, B, C, F] = get_coeff(T(1, :), zcryst, time, N, vgrowth, lambda, St, xstep, time, f_bottom, f_top);
 
 %% Solving
 clc

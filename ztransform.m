@@ -1,4 +1,4 @@
-function zgrid = ztransform( xgrid, N, zcryst )
+function zgrid = ztransform( xgrid, zcryst )
 % z-transform of grid in Stefan problem
 % z is a grid, where the point of crystalization lie in the zcryst
 
@@ -10,10 +10,10 @@ function zgrid = ztransform( xgrid, N, zcryst )
 % OUTPUT:
 % :z: values of corresponding node of z-grid
 
-zgrid = zeros(1, sum(N)+1);
-zgrid(1:N(1)) = 2 * xgrid(1:N(1)) * zcryst;
-zgrid(N(1)+1) = zcryst;
-zgrid(N(1)+2:end) = 2 * xgrid(N(1)+2:end) * (1 - zcryst) + 2*zcryst - 1;
+zgrid = zeros(1, length(xgrid));
+
+zgrid(xgrid <= 0.5) = 2 * xgrid(xgrid <= 0.5) * zcryst;
+zgrid(xgrid > 0.5) = 2 * xgrid(xgrid > 0.5) * (1 - zcryst) + 2*zcryst - 1;
 
 end
 

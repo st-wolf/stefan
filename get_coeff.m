@@ -27,10 +27,10 @@ delta = tstep / (4 * xstep);
 
 % $\dfrac{dz}{dt}$ computation
 xgrid = 0:xstep:1;
-zgrid = ztransform(xgrid, N, zcryst);
+zgrid = ztransform(xgrid, zcryst);
 
 zcryst_next = zcryst + tstep * vgrowth;
-zgrid_next = ztransform(xgrid, N, zcryst_next);
+zgrid_next = ztransform(xgrid, zcryst_next);
 
 zdiff_half = (zgrid_next - zgrid) / tstep;
 
@@ -66,29 +66,29 @@ f(1:N(1)-1) = jacobian(1) * T(2:N(1)) ...
 	+ (alpha(1) / jacobian_half(1)) * (T(3:N(1)+1) - 2*T(2:N(1)) + T(1:N(1)-1)) ...
 	+ delta * ((zdiff_half(2:N(1)) .* (T(3:N(1)+1) + T(2:N(1)))) ... 
 				- (zdiff_half(1:N(1)-1) .* (T(2:N(1)) + T(1:N(1)-1))));
-			
+            
 f(N(1)+2:end) = jacobian(2) * T(N(1)+3:end-1) ...
 	+ (alpha(2) / jacobian_half(2)) * (T(N(1)+4:end) - 2*T(N(1)+3:end-1) + T(N(1)+2:end-2)) ...
-	+ delta * ((zdiff_half(N(1)+3:end-1) .* (T(N(1)+4:end) + T(N(1)+3:end-1))) ... 
-				 -(zdiff_half(N(1)+2:end-2) .* (T(N(1)+3:end-1) + T(N(1)+2:end-2))));
+	+ delta * ((zdiff_half(N(1)+3:end) .* (T(N(1)+4:end) + T(N(1)+3:end-1))) ... 
+				 -(zdiff_half(N(1)+2:end-1) .* (T(N(1)+3:end-1) + T(N(1)+2:end-2))));
 
 % Coefficients for solid border node
 
 a(N(1)) = alpha(1) / jacobian_half(1) - delta * zdiff_half(N(1));
 b(N(1)) = 0;
 c(N(1)) = jacobian_next(1) + (3*alpha(1) / jacobian_half(1)) + delta * zdiff_half(N(1));
-f(N(1)) = jacobian(1) * T(N(1)) - (4*alpha(1) / sum(jacobian_half)) * T(N(1)) ...
+f(N(1)) = jacobian(1) * T(N(1)) - (2*alpha(1) / jacobian_half(1)) * T(N(1)) ...
 	- (alpha(1) / jacobian_half(1)) * (T(N(1)) - T(N(1)-1)) ...
 	- delta * zdiff_half(N(1)) * (T(N(1)) + T(N(1)-1));
 
 % Coefficients for liquid border node
 
-a(N(1)+2) = 0;
-b(N(1)+2) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+2);
-c(N(1)+2) = jacobian_next(2) + (3*alpha(2) / jacobian_half(2)) - delta * zdiff_half(N(1)+2);
-f(N(1)+2) = jacobian(2) * T(N(1)+2) - (4*alpha(2) / sum(jacobian_half)) * T(N(1)+1) ...
-	- (alpha(2) / jacobian_half(2) * (T(N(1)+2) - T(N(1)+1))) ...
-	- delta * zdiff_half(N(1)+2) * (T(N(1)+2) + T(N(1)+1));
+a(N(1)+1) = 0;
+b(N(1)+1) = alpha(2) / jacobian_half(2) + delta * zdiff_half(N(1)+2);
+c(N(1)+1) = jacobian_next(2) + (3*alpha(2) / jacobian_half(2)) - delta * zdiff_half(N(1)+2);
+f(N(1)+1) = jacobian(2) * T(N(1)+2) - (2*alpha(2) / jacobian_half(2)) * T(N(1)+2) ...
+	+ (alpha(2) / jacobian_half(2)) * (T(N(1)+3) - T(N(1)+2)) ...
+	+ delta * zdiff_half(N(1)+2) * (T(N(1)+3) + T(N(1)+2));
 
 % Coefficients for crystalization node
 
@@ -98,8 +98,8 @@ beta = tstep / xstep;
 af = (lambda_sl * beta) / jacobian_half(1);
 bf = beta / jacobian_half(2);
 cf = -St;
-ff = (lambda_sl * beta / jacobian_half(1)) * T(N(1)) ...
-	+ (beta / jacobian_half(2)) * T(N(1)+1);
+ff = (lambda_sl * beta / jacobian_half(1)) * T(N(1)+1) ...
+	+ (beta / jacobian_half(2)) * T(N(1)+2);
 
 a = [a(1:N(1)) af a(N(1)+1:end)];
 b = [b(1:N(1)) bf b(N(1)+1:end)];
@@ -107,9 +107,11 @@ c = [c(1:N(1)) cf c(N(1)+1:end)];
 f = [f(1:N(1)) ff f(N(1)+1:end)];
 
 % Coefficients for boundary nodes
-a = [0.5 a 0.5];
+a = [a 0.5];
+b = [0.5 b];
 c = [0.5 c 0.5];
 f = [f_bottom(time) f f_top(time)];
+% OR f = [f_top(time) f f_bottom(time)]; ???
 f = -f;
 
 end
