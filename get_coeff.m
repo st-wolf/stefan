@@ -1,4 +1,4 @@
-function [a, b, c, f] = get_coeff( T, zcryst, time, N, vgrowth, lambda, St, xstep, tstep, f_bottom, f_top )
+function [a, b, c, f] = get_coeff(T, zcryst, time, N, vgrowth, xstep, tstep)
 % Evaluation of coefficients for tridiagonal matrix algorithm
 
 % TODO: make all parameters global (or some of them) 
@@ -10,10 +10,8 @@ function [a, b, c, f] = get_coeff( T, zcryst, time, N, vgrowth, lambda, St, xste
 % :N:
 % :vgrouth:
 % :lambda:
-% :St:
 % :xstep:
 % :tstep:
-% ...
 
 % OUTPUT:
 % :a: a-coefficients
@@ -21,7 +19,13 @@ function [a, b, c, f] = get_coeff( T, zcryst, time, N, vgrowth, lambda, St, xste
 % :c: ...
 % :f: right side coefficients
 
-% alpha = [solid liquid]
+% GLOBAL:
+global lambda
+global St
+global f_bottom
+global f_top
+
+% alpha = [alpha_solid alpha_liquid]
 alpha = tstep * lambda / (2 * xstep^2);
 delta = tstep / (4 * xstep);
 
@@ -77,9 +81,9 @@ f(N(1)+2:end) = jacobian(2) * T(N(1)+3:end-1) ...
 a(N(1)) = alpha(1) / jacobian_half(1) - delta * zdiff_half(N(1));
 b(N(1)) = 0;
 c(N(1)) = jacobian_next(1) + (3*alpha(1) / jacobian_half(1)) + delta * zdiff_half(N(1));
-f(N(1)) = jacobian(1) * T(N(1)) - (2*alpha(1) / jacobian_half(1)) * T(N(1)) ...
-	- (alpha(1) / jacobian_half(1)) * (T(N(1)) - T(N(1)-1)) ...
-	- delta * zdiff_half(N(1)) * (T(N(1)) + T(N(1)-1));
+f(N(1)) = jacobian(1) * T(N(1)+1) - (2*alpha(1) / jacobian_half(1)) * T(N(1)+1) ...
+	- (alpha(1) / jacobian_half(1)) * (T(N(1)+1) - T(N(1))) ...
+	- delta * zdiff_half(N(1)+1) * (T(N(1)+1) + T(N(1)));
 
 % Coefficients for liquid border node
 
@@ -112,7 +116,7 @@ b = [0.5 b];
 c = [0.5 c 0.5];
 f = [f_bottom(time) f f_top(time)];
 % OR f = [f_top(time) f f_bottom(time)]; ???
-f = -f;
+f = -f(end:-1:1);
 
 end
 
