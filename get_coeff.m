@@ -113,10 +113,10 @@ f = [f(1:N(1)) ff f(N(1)+1:end)];
 % Coefficients for boundary nodes
 a = [a 0.5];
 b = [0.5 b];
-c = [0.5 c 0.5];
-f = [f_bottom(time) f f_top(time)];
+c = [0.5 -c 0.5];
+f = [f_bottom(time) -f f_top(time)];
 % OR f = [f_top(time) f f_bottom(time)]; ???
-f = -f(end:-1:1);
+% f = -f(end:-1:1);
 
 end
 
